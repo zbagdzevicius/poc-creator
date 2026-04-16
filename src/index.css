@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+@theme {
+  /* Design tokens — populated during Phase 3 based on Phase 2 research */
+  --color-primary: #3b82f6;
+  --color-secondary: #8b5cf6;
+}

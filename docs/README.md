@@ -11,7 +11,8 @@ This directory drives the POC creation pipeline.
    - **"analyze PRDs"** — Phase 1 only: refine PRDs into development artifacts
    - **"research UI"** — Phase 2 only: find design inspiration
    - **"build it"** — Phase 3+4: develop and validate in a loop
-   - **"deploy"** — Phase 5: deploy to Vercel
+   - **"deploy"** — Phase 5: deploy to GitHub Pages (default)
+   - **"deploy to Vercel"** — Phase 5: deploy to Vercel (requires account)
 
 ## Directory structure
 

@@ -8,14 +8,17 @@ This repository is an AI-powered POC creation pipeline. Claude Code drives the e
 - **Styling:** TailwindCSS v4 (CSS-first config via `@theme` in `src/index.css`)
 - **Build:** Vite 6 with `@tailwindcss/vite` plugin
 - **UI Validation:** Playwright skill MCP (enabled in `.claude/settings.json`)
-- **Deployment:** Vercel CLI (`npx vercel`)
+- **Deployment:** GitHub Pages (default, zero-friction) or Vercel CLI (preview URLs)
 
 ## Commands
 
 ```bash
-npm run dev       # Start Vite dev server (port 5173)
-npm run build     # Production build to dist/
-npm run preview   # Preview production build
+npm run dev              # Start Vite dev server (port 5173)
+npm run build            # Production build to dist/
+npm run preview          # Preview production build
+npm run deploy:pages     # Deploy to GitHub Pages (default)
+npm run deploy:vercel    # Deploy preview to Vercel
+npm run deploy:vercel:prod  # Deploy production to Vercel
 ```
 
 ## Workflow Phases
@@ -150,17 +153,31 @@ Use the **playwright-skill** to validate the UI. For each page/route:
 **Trigger:** User says "start phase 5", "deploy", or "ship it"
 **Depends on:** Phase 3+4 loop passed
 
-**Process:**
+Two deployment targets are available. **GitHub Pages is the default** — it requires no extra accounts or login. Vercel is available for users who want instant preview URLs.
 
-1. Run `npm run build` — confirm clean production build.
-2. Deploy using Vercel CLI:
+#### Option A: GitHub Pages (default)
+
+1. Ensure the repo has a GitHub remote. If not, ask the user or create one with `gh repo create`.
+2. Check that `vite.config.ts` has the correct `base` path set for GitHub Pages:
+   - If deploying to `https://<user>.github.io/<repo>/`, the `base` must be `/<repo>/`
+   - Update `vite.config.ts` to add `base: '/<repo-name>/'` before building
+3. Run `npm run deploy:pages` — this builds and publishes to the `gh-pages` branch.
+4. Ensure GitHub Pages is enabled in the repo settings (Source: `gh-pages` branch, `/ (root)` folder). Use the GitHub CLI if possible:
    ```bash
-   npx vercel --yes          # Preview deployment
-   # or
-   npx vercel --prod --yes   # Production deployment (if user requests)
+   gh api repos/{owner}/{repo}/pages -X POST -f source.branch=gh-pages -f source.path=/ 2>/dev/null || true
    ```
-3. Report the deployment URL to the user.
-4. Use the **playwright-skill** to visit the live URL and take a final screenshot of the deployed version.
+5. Report the live URL: `https://<user>.github.io/<repo>/`
+6. Use the **playwright-skill** to visit the live URL and take a final screenshot.
+
+**Output:** Live GitHub Pages URL.
+
+#### Option B: Vercel (if user says "deploy to Vercel")
+
+1. Ensure `base` in `vite.config.ts` is `'/'` (default — not a subpath).
+2. Run `npm run deploy:vercel` for preview or `npm run deploy:vercel:prod` for production.
+3. If the user hasn't authenticated, Vercel CLI will prompt them to log in (interactive, opens browser).
+4. Report the deployment URL.
+5. Use the **playwright-skill** to verify the deployed version.
 
 **Output:** Live Vercel URL.
 

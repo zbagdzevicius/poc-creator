@@ -30,7 +30,13 @@ Before any phase, verify the environment is ready:
 1. Check if `node` and `npm` are available by running `node --version`
 2. If missing: detect the OS and run `./setup.sh` (macOS/Linux) or `powershell -ExecutionPolicy Bypass -File setup.ps1` (Windows)
 3. If `node_modules/` doesn't exist, run `npm install`
-4. Confirm `npm run build` succeeds before proceeding
+4. **Playwright skill check:** The first time the playwright-skill MCP is used, it needs its dependencies installed. Before running any Playwright validation, test if it's ready:
+   ```bash
+   cd ~/.claude/plugins/cache/playwright-skill/playwright-skill/*/skills/playwright-skill && node -e "require('playwright')" 2>/dev/null || npm run setup
+   ```
+   The skill directory may vary — look in `~/.claude/plugins/cache/playwright-skill/` for the actual path.
+5. **GitHub CLI check:** Verify `gh` is available for GitHub Pages deployment. If missing, the setup script installs it, or the user can install manually from https://cli.github.com/
+6. Confirm `npm run build` succeeds before proceeding
 
 ---
 
@@ -145,6 +151,8 @@ Use the **playwright-skill** to validate the UI. For each page/route:
 - Prefer composition over prop drilling
 - All text content should be realistic, not "Lorem ipsum"
 - Mock data in `src/lib/mock-data.ts` as typed constants
+- **recharts Tooltip formatter:** Use `(value)` not `(value: number)` — recharts v3 types pass `ValueType | undefined`. Cast with `Number(value)` inside the formatter body. Example: `formatter={(value) => \`$${Number(value).toLocaleString()}\`}`
+- **Router:** Use `BrowserRouter` during development. Switch to `HashRouter` only when deploying to GitHub Pages (Phase 5 handles this automatically)
 
 ---
 
@@ -157,17 +165,45 @@ Two deployment targets are available. **GitHub Pages is the default** — it req
 
 #### Option A: GitHub Pages (default)
 
-1. Ensure the repo has a GitHub remote. If not, ask the user or create one with `gh repo create`.
-2. Check that `vite.config.ts` has the correct `base` path set for GitHub Pages:
-   - If deploying to `https://<user>.github.io/<repo>/`, the `base` must be `/<repo>/`
-   - Update `vite.config.ts` to add `base: '/<repo-name>/'` before building
-3. Run `npm run deploy:pages` — this builds and publishes to the `gh-pages` branch.
-4. Ensure GitHub Pages is enabled in the repo settings (Source: `gh-pages` branch, `/ (root)` folder). Use the GitHub CLI if possible:
+1. **Ensure the repo has a GitHub remote.** If not, ask the user or create one with `gh repo create`.
+
+2. **Detect the repo name** from the git remote URL:
+   ```bash
+   REPO_NAME=$(basename -s .git $(git config --get remote.origin.url))
+   ```
+
+3. **Set the Vite base path** in `vite.config.ts`. GitHub Pages serves from `/<repo>/`, so assets and routes need the subpath:
+   - Add `base: '/<repo-name>/'` to the `defineConfig` object
+   - Example: if repo is `poc-creator`, set `base: '/poc-creator/'`
+
+4. **Switch to HashRouter for static hosting.** `BrowserRouter` returns 404 on page refresh with GitHub Pages. In `src/App.tsx`:
+   - Change `import { BrowserRouter` to `import { HashRouter`
+   - Replace `<BrowserRouter>` / `</BrowserRouter>` with `<HashRouter>` / `</HashRouter>`
+
+5. **Build and deploy:**
+   ```bash
+   npm run deploy:pages
+   ```
+   This builds to `dist/` and publishes to the `gh-pages` branch.
+
+6. **Enable GitHub Pages** in the repo settings. Use the GitHub CLI if available:
    ```bash
    gh api repos/{owner}/{repo}/pages -X POST -f source.branch=gh-pages -f source.path=/ 2>/dev/null || true
    ```
-5. Report the live URL: `https://<user>.github.io/<repo>/`
-6. Use the **playwright-skill** to visit the live URL and take a final screenshot.
+   **If `gh` is not installed or the command fails**, tell the user to enable it manually:
+   - Go to `https://github.com/{owner}/{repo}/settings/pages`
+   - Source: **Deploy from a branch**
+   - Branch: **gh-pages**, folder: **/ (root)**
+   - Click **Save**
+
+7. **Report the live URL:** `https://<user>.github.io/<repo>/`
+
+8. **Use the playwright-skill** to visit the live URL and take a final screenshot to verify.
+
+9. **After deployment**, revert the router and base path changes so local development continues to work:
+   - Remove `base: '/<repo-name>/'` from `vite.config.ts` (or set back to `'/'`)
+   - Switch `HashRouter` back to `BrowserRouter` in `src/App.tsx`
+   - Do NOT commit these reverts — they were only needed for the deploy build
 
 **Output:** Live GitHub Pages URL.
 

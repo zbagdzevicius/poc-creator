@@ -58,6 +58,28 @@ try {
     exit 1
 }
 
+# --- Install GitHub CLI ---
+$ghInstalled = $false
+try {
+    gh --version 2>$null | Out-Null
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "GitHub CLI found." -ForegroundColor Green
+        $ghInstalled = $true
+    }
+} catch {
+    $ghInstalled = $false
+}
+
+if (-not $ghInstalled) {
+    Write-Host "Installing GitHub CLI..."
+    if ($wingetAvailable) {
+        winget install GitHub.cli --accept-source-agreements --accept-package-agreements --silent
+        $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+    } else {
+        Write-Host "Could not install GitHub CLI automatically. Install manually: https://cli.github.com/" -ForegroundColor Yellow
+    }
+}
+
 # --- Install project dependencies ---
 Write-Host ""
 Write-Host "Installing project dependencies..."

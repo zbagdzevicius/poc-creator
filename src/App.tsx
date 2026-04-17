@@ -1,15 +1,29 @@
+import { HashRouter, Routes, Route } from 'react-router-dom'
+import { ThemeProvider } from './contexts/ThemeContext'
+import { SidebarProvider } from './contexts/SidebarContext'
+import { AppLayout } from './components/layout/AppLayout'
+import { DashboardPage } from './pages/DashboardPage'
+import { AnalyticsPage } from './pages/AnalyticsPage'
+import { CustomersPage } from './pages/CustomersPage'
+import { OrdersPage } from './pages/OrdersPage'
+import { SettingsPage } from './pages/SettingsPage'
+
 export default function App() {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          POC Creator
-        </h1>
-        <p className="text-lg text-gray-600 max-w-md">
-          Drop your PRDs into <code className="bg-gray-200 px-2 py-1 rounded text-sm">docs/prds/</code> and
-          tell Claude Code to <strong>run full pipeline</strong>.
-        </p>
-      </div>
-    </div>
+    <ThemeProvider>
+      <SidebarProvider>
+        <HashRouter>
+          <Routes>
+            <Route element={<AppLayout />}>
+              <Route path="/" element={<DashboardPage />} />
+              <Route path="/analytics" element={<AnalyticsPage />} />
+              <Route path="/customers" element={<CustomersPage />} />
+              <Route path="/orders" element={<OrdersPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+            </Route>
+          </Routes>
+        </HashRouter>
+      </SidebarProvider>
+    </ThemeProvider>
   )
 }

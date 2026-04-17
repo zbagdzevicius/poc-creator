@@ -13,9 +13,11 @@
     "postinstall": "npx playwright install chromium"
   },
   "dependencies": {
+    "lucide-react": "^1.8.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-router-dom": "^7.5.0"
+    "react-router-dom": "^7.5.0",
+    "recharts": "^3.8.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.52.0",
